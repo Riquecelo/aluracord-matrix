@@ -21,7 +21,7 @@ export default function ChatPage() {
     function handleNovamensagem(novaMensagem) {
         const mensagem = {
             id: listaDeMensagens.length + 1,
-            de: 'vanessa',
+            de: 'Riquecelo',
             texto: novaMensagem,
         }
 
@@ -182,7 +182,7 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/vanessametonini.png`}
+                                src={`https://github.com/Riquecelo.png`}
                             />
                             <Text tag="strong">
                                 {mensagem.de}
