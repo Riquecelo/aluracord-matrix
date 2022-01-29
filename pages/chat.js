@@ -1,11 +1,27 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
-import React from 'react';
+import { createClient } from '@supabase/supabase-js';
+import React, { useEffect } from 'react';
 import appConfig from '../config.json';
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQ2NjI0MiwiZXhwIjoxOTU5MDQyMjQyfQ.vrW4Qbnz4NOI6X8chDYUrf6VzrtfLn4YVEEJpkmECz0';
+const SUPABASE_URL = 'https://sdejytajduvncslwjdli.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
+    useEffect(() =>{
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', { ascending: false})
+            .then(({data}) => {
+                setListaDeMensagens(data);
+            })
+        },[])
+   
     /* Usuário 
     + usuário dgitar no campo textarea
     + apertar enter para enviar
@@ -14,22 +30,30 @@ export default function ChatPage() {
        Dev
     + [x]campo criado
     + [x]vamos usar o onChange, usar o useState (ter um if para caso seja enter limpar a variável)
-    + []lista de mensagem
+    + [x]lista de mensagem
     */
 
     // ./Sua lógica vai aqui
     function handleNovamensagem(novaMensagem) {
         const mensagem = {
-            id: listaDeMensagens.length + 1,
+           // id: listaDeMensagens.length + 1,
             de: 'Riquecelo',
             texto: novaMensagem,
         }
 
-        setListaDeMensagens([
-            mensagem,
-            ...listaDeMensagens,
-            
-        ]);
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                mensagem
+            ])
+            .then(({data}) =>{
+               // console.log('mensagem: ', retornoMensagem)
+                setListaDeMensagens([
+                       data[0],
+                       ...listaDeMensagens,
+                    ]);
+            });
+
         setMensagem('');
     }
 
@@ -146,7 +170,7 @@ function MessageList(props) {
         <Box
             tag="ul"
             styleSheet={{
-                overflow: 'scroll',
+                overflow: 'auto',
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 flex: 1,
@@ -164,7 +188,7 @@ function MessageList(props) {
                             borderRadius: '5px',
                             padding: '6px',
                             marginBottom: '12px',
-                            hover: {
+                            hover:{
                                 backgroundColor: appConfig.theme.colors.neutrals[700],
                             }
                         }}
@@ -182,7 +206,7 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/Riquecelo.png`}
+                                src={`https://github.com/${mensagem.de}.png`}
                             />
                             <Text tag="strong">
                                 {mensagem.de}
@@ -207,9 +231,3 @@ function MessageList(props) {
     )
 }
 
-{/*
-export default function PaginadoChat(){
-    return (
-        <div>Página do chat</div>
-    )
-}*/}
