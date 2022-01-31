@@ -1,25 +1,47 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
 import appConfig from '../config.json';
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQ2NjI0MiwiZXhwIjoxOTU5MDQyMjQyfQ.vrW4Qbnz4NOI6X8chDYUrf6VzrtfLn4YVEEJpkmECz0';
 const SUPABASE_URL = 'https://sdejytajduvncslwjdli.supabase.co';
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function escutaMensagemEmTempoReal(adicionaMensagem){
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT', (respostaLive)=>{
+            adicionaMensagem(respostaLive.new)
+        })
+        .subscribe();
+}
 
 export default function ChatPage() {
+    const roteamento = useRouter();
+    const usuarioLogado = roteamento.query.username;
+    console.log(usuarioLogado)
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
-    useEffect(() =>{
+    React.useEffect(() =>{
         supabaseClient
             .from('mensagens')
             .select('*')
             .order('id', { ascending: false})
             .then(({data}) => {
                 setListaDeMensagens(data);
-            })
+            });
+        escutaMensagemEmTempoReal((novaMensagem)=>{
+        
+            setListaDeMensagens((valorAtualDaLista)=>{
+                return[                    
+                    novaMensagem,
+                    ...valorAtualDaLista,
+                ]
+            });
+        });
         },[])
    
     /* Usuário 
@@ -37,7 +59,7 @@ export default function ChatPage() {
     function handleNovamensagem(novaMensagem) {
         const mensagem = {
            // id: listaDeMensagens.length + 1,
-            de: 'Riquecelo',
+            de: usuarioLogado,
             texto: novaMensagem,
         }
 
@@ -48,10 +70,7 @@ export default function ChatPage() {
             ])
             .then(({data}) =>{
                // console.log('mensagem: ', retornoMensagem)
-                setListaDeMensagens([
-                       data[0],
-                       ...listaDeMensagens,
-                    ]);
+               
             });
 
         setMensagem('');
@@ -139,6 +158,12 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
+                        <ButtonSendSticker
+                            onStickerClick={(sticker) =>{
+                                //console.log('usando sticker, enviar para o banco',sticker);
+                                handleNovamensagem(':sticker:' + sticker);
+                            }}
+                        />
                     </Box>
                 </Box>
             </Box>
@@ -165,7 +190,7 @@ function Header() {
 }
 
 function MessageList(props) {
-    console.log(props);
+    //console.log(props);
     return (
         <Box
             tag="ul"
@@ -222,7 +247,13 @@ function MessageList(props) {
                                 {(new Date().toLocaleDateString())}
                             </Text>
                         </Box>
-                        {mensagem.texto}
+                        {/*Condicional: {mensagem.texto.startsWith(':sticker:').toString()}*/}
+                        {mensagem.texto.startsWith(':sticker:')?(
+                            <Image src={mensagem.texto.replace(':sticker:','')}/>
+                        ):(
+                            mensagem.texto
+                        )}
+                       {/* {mensagem.texto}*/}
                     </Text>
                 );
             })}

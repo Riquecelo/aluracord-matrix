@@ -73,7 +73,7 @@ export default function PaginaInicial() {
             onSubmit={function(infosDoEvento){
               infosDoEvento.preventDefault();
               console.log('Prevenção do evento');
-              roteamento.push('/chat');
+              roteamento.push(`/chat?username=${username}`);
               //window.location.href='/chat';
             }}
             styleSheet={{
